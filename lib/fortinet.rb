@@ -17,7 +17,7 @@ class AccessPolicy
 
   end
 
-  def FortinetConfig.finalize(id)
+  def AccessPolicy.finalize(id)
     @session.close
   end
 
@@ -25,9 +25,9 @@ class AccessPolicy
   def new_id
     watermark = 1
     @config.each_line do |line|
-      if /^(\w)*edit/=~line
+      if /^(\s)*edit/=~line
         id = line.split[1]
-        watermark = id + 1 if id >= watermark
+        watermark = id.to_i + 1 if id.to_i >= watermark
       end
     end
     return watermark
@@ -48,9 +48,9 @@ class AccessPolicyDelivery < AccessPolicy
       # isolate id
       id = nil
       @config.each_line do |line|
-        if /^(\w)*edit/=~line
+        if /^(\s)*edit/=~line
           id = line.split[1]
-        elsif /^(\w)*set recipient-pattern/=~line
+        elsif /^(\s)*set recipient-pattern/=~line
           break if line.split[2] == domain
         end
       end
@@ -58,7 +58,7 @@ class AccessPolicyDelivery < AccessPolicy
       @session.cmd('config policy access-control delivery')
       @session.cmd("edit #{id}")
       @session.cmd("set tls-profile #{profile}")
-      @session.cmd('next')      
+      @session.cmd('next')
       @session.cmd('end')
     else
       #add domain entry
@@ -68,8 +68,8 @@ class AccessPolicyDelivery < AccessPolicy
       @session.cmd("set recipient-pattern #{domain}")
       @session.cmd("set tls-profile #{profile}")
       # last policy is default catchall, we need to be one notch higher
-      @session.cmd("move #{id} up")
       @session.cmd('next')
+      @session.cmd("move #{id} up")
       @session.cmd('end')
     end
   end
@@ -79,9 +79,9 @@ class AccessPolicyDelivery < AccessPolicy
       # isolate id
       id = nil
       @config.each_line do |line|
-        if /^(\w)*edit/=~line
+        if /^(\s)*edit/=~line
           id = line.split[1]
-        elsif /^(\w)*set recipient-pattern/=~line
+        elsif /^(\s)*set recipient-pattern/=~line
           break if line.split[2] == domain
         end
       end
@@ -107,9 +107,9 @@ class AccessPolicyReceive < AccessPolicy
       # isolate id
       id = nil
       @config.each_line do |line|
-        if /^(\w)*edit/=~line
+        if /^(\s)*edit/=~line
           id = line.split[1]
-        elsif /^(\w)*set sender-pattern/=~line
+        elsif /^(\s)*set sender-pattern/=~line
           break if line.split[2] == domain
         end
       end
@@ -128,8 +128,8 @@ class AccessPolicyReceive < AccessPolicy
       @session.cmd("set tls-profile #{profile}")
       @session.cmd('set action relay')
       # last policy is default catchall, we need to be one notch higher
-      @session.cmd("move #{id} up")
       @session.cmd('next')
+      @session.cmd("move #{id} up")
       @session.cmd('end')
     end
   end
@@ -139,9 +139,9 @@ class AccessPolicyReceive < AccessPolicy
       # isolate id
       id = nil
       @config.each_line do |line|
-        if /^(\w)*edit/=~line
+        if /^(\s)*edit/=~line
           id = line.split[1]
-        elsif /^(\w)*set sender-pattern/=~line
+        elsif /^(\s)*set sender-pattern/=~line
           break if line.split[2] == domain
         end
       end
